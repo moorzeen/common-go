@@ -7,7 +7,10 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"time"
 
+	"github.com/moorzeen/common-go/logger"
+	"github.com/patrickmn/go-cache"
 	"github.com/sirupsen/logrus"
 	"github.com/xssnick/tonutils-go/address"
 	"github.com/xssnick/tonutils-go/ton"
@@ -21,6 +24,8 @@ const (
 	contentSemichain = "semichain"
 	contentOffchain  = "offchain"
 )
+
+var memcache = cache.New(5*time.Minute, 10*time.Minute)
 
 type MasterData struct {
 	Address     *address.Address
@@ -65,9 +70,9 @@ func GetMasterData(ctx context.Context, api ton.APIClientWrapped, master *addres
 		content := data.Content.(*nft.ContentSemichain)
 		contentType = contentSemichain
 
-		result, err := fetchOffchainContent(content.URI)
+		result, err := cachedOffchainContent(content.URI)
 		if err != nil {
-			logrus.Errorf("fetch offchain content: %s", err)
+			logrus.Errorf("fetch cashed offchain content: %s", err)
 			break
 		}
 
@@ -81,9 +86,9 @@ func GetMasterData(ctx context.Context, api ton.APIClientWrapped, master *addres
 		content := data.Content.(*nft.ContentOffchain)
 		contentType = contentOffchain
 
-		result, err := fetchOffchainContent(content.URI)
+		result, err := cachedOffchainContent(content.URI)
 		if err != nil {
-			logrus.Errorf("fetch offchain content: %s", err)
+			logrus.Errorf("fetch cashed offchain content: %s", err)
 			break
 		}
 
@@ -144,6 +149,23 @@ func GetMasterByWallet(ctx context.Context, api ton.APIClientWrapped, jettonWall
 	}
 
 	return data, nil
+}
+
+func cachedOffchainContent(uri string) (*OffchainContent, error) {
+	if cached, ok := memcache.Get(uri); ok {
+		logrus.Debugln("got from cache", logger.AnyPrint(cached))
+		return cached.(*OffchainContent), nil
+	}
+
+	result, err := fetchOffchainContent(uri)
+	if err != nil {
+		return nil, fmt.Errorf("fetch offchain content: %w", err)
+	}
+
+	memcache.Set(uri, result, time.Hour)
+	logrus.Debugln("set cache", logger.AnyPrint(result))
+
+	return result, nil
 }
 
 func fetchOffchainContent(uri string) (*OffchainContent, error) {
