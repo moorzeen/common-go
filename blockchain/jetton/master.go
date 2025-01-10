@@ -153,7 +153,7 @@ func GetMasterByWallet(ctx context.Context, api ton.APIClientWrapped, jettonWall
 
 func cachedOffchainContent(uri string) (*OffchainContent, error) {
 	if cached, ok := memcache.Get(uri); ok {
-		logrus.Debugln("got from cache", logger.AnyPrint(cached))
+		fmt.Println("got from cache", logger.AnyPrint(cached))
 		return cached.(*OffchainContent), nil
 	}
 
@@ -163,7 +163,7 @@ func cachedOffchainContent(uri string) (*OffchainContent, error) {
 	}
 
 	memcache.Set(uri, result, time.Hour)
-	logrus.Debugln("set cache", logger.AnyPrint(result))
+	fmt.Println("set cache", logger.AnyPrint(result))
 
 	return result, nil
 }
