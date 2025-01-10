@@ -17,9 +17,9 @@ import (
 )
 
 const (
-	content_onchain   = "onchain"
-	content_semichain = "semichain"
-	content_offchain  = "offchain"
+	contentOnchain   = "onchain"
+	contentSemichain = "semichain"
+	contentOffchain  = "offchain"
 )
 
 type MasterData struct {
@@ -54,7 +54,7 @@ func GetMasterData(ctx context.Context, api ton.APIClientWrapped, master *addres
 
 	case *nft.ContentOnchain:
 		content := data.Content.(*nft.ContentOnchain)
-		contentType = content_onchain
+		contentType = contentOnchain
 		name = content.GetAttribute("name")
 		symbol = content.GetAttribute("symbol")
 		description = content.GetAttribute("description")
@@ -63,7 +63,7 @@ func GetMasterData(ctx context.Context, api ton.APIClientWrapped, master *addres
 
 	case *nft.ContentSemichain:
 		content := data.Content.(*nft.ContentSemichain)
-		contentType = content_semichain
+		contentType = contentSemichain
 
 		result, err := fetchOffchainContent(content.URI)
 		if err != nil {
@@ -79,7 +79,7 @@ func GetMasterData(ctx context.Context, api ton.APIClientWrapped, master *addres
 
 	case *nft.ContentOffchain:
 		content := data.Content.(*nft.ContentOffchain)
-		contentType = content_offchain
+		contentType = contentOffchain
 
 		result, err := fetchOffchainContent(content.URI)
 		if err != nil {
